@@ -1,0 +1,102 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Active Listings</h2>
+
+    
+  
+    <div class="container mt-4">
+        
+        <div class="row">   
+            <div class="col-lg-4 col-md-6 col-xs-12">
+                <img height="auto" class="card-img-top p-5" src="{{listing.link}}">
+            </div>
+            <div class="col-lg-4 col-md-6 col-xs-12">
+                <div class="card-body">
+                    <form action="{% url 'listing' listing.id %}" method="POST">
+                        {% csrf_token %}
+                            {% if user.is_authenticated %}
+                                {% if status %}
+                                <p><input name="status" type="submit" value="{{status}}"></p>
+                                {% endif %}
+                                    {% if listing.creators == user %}
+                                        {% if listing.listing_status %}
+                                            <input name="auction" type="submit" value="Close Auction">
+                                        {% elif listing.listing_status == False and listing.bidder == user %}
+                                            <p class="alert alert-danger" role="alert">Auction is closed</p>
+                                            <p class="alert alert-success" role="alert">Congratulations! You won this auction {{ listing.bidder }}</p>
+                                        {% elif listing.listing_status == False %}
+                                            The Auction is closed
+                                        {% endif %}
+
+                                    {% elif listing.listing_status == False and listing.bidder == user %}
+                                        <p class="alert alert-danger" role="alert">Auction is closed</p>
+                                        <p class="alert alert-success" role="alert">Congratulations! You won this auction {{ listing.bidder }}</p>
+                                    {% else %}
+                                        {% if listing.listing_status == False %}
+                                            <p class="alert alert-danger" role="alert">Auction is closed</p>
+                                        {% endif %}
+                                    {% endif %}
+                            {% else %}
+                                Not signed in.
+                            {% endif %}
+                    </form>
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ listing.item }}</h5>
+                    <p class="card-text">{{ listing.description }}.</p>
+                    {% if listing.bid == 0 %}
+                    <p class="card-text">Current Price: No Bids</p>
+                    {% else %}
+                    <p class="card-text">Current Price: $ {{ listing.bid }}</p>
+                    {% endif %}
+                    <p class="card-text">Starting Price: $ {{ listing.price }}</p>
+                    <p class="card-text">Category: {{ listing.group }}</p>
+                    <p class="card-text"><small class="text-muted">Listed by: {{listing.creators}}</small></p>
+                    <p class="card-text"><small class="text-muted">Created {{listing.date}}</small></p>
+                    
+                    {% if message == True %}
+                        {% if listing.price > listing.bid %}
+                            <p class="alert alert-warning" role="alert">Your bid must be bigger than $ {{ listing.price }}</p>
+                        {% else %}
+                            <p class="alert alert-warning" role="alert">Your bid must be bigger than $ {{ listing.bid }}</p>
+                        {% endif %}
+                    {% endif %}
+                    <form action="{% url 'listing' listing.id %}" method="POST">
+                        {% csrf_token %}
+                        {% if user.is_authenticated %}
+                            {% if listing.listing_status %}
+                                <div class="form-group">
+                                    Bid Price: {{ bid }}
+                                </div>
+                                <input name="bids" type="submit" value="Place Your Bid">
+                            {%endif%}
+                        {%endif%}
+                    </form>
+                </div>
+            </div> 
+        </div> 
+        <form action="{% url 'listing' listing.id %}" method="POST">
+            {% csrf_token %}
+            {% if user.is_authenticated %}
+            <div class="card-body">
+                <h4>Add Comment</h4>
+                <div class="form-group">
+                {{ comment }}
+                </div>        
+                <input type="submit" value="Add comment">     
+            </div>
+            {%endif%}
+        </form>
+        <div class="card-body">
+            <h4>Comment/s:</h4>
+            {% for comment in show %}
+            <ul>
+                <small><em>{{ comment.writer }} says</em></small>: {{ comment.comment }}
+            </ul>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}
